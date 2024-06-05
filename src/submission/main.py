@@ -1,37 +1,18 @@
-import os
-import sys
-import random
-from copy import deepcopy
 from src.hex_engine import hexPosition
-
-
-def main():
-    game = hexPosition(size=7)
-
-    while game.winner == 0:
-        game.print()
-
-        player = "White (1)" if game.player == 1 else "Black (-1)"
-        print(f"{player}'s turn to move.")
-
-        possible_actions = game.get_action_space()
-
-        if not possible_actions:
-            break
-
-        chosen_move = random.choice(possible_actions)
-        game.moove(chosen_move)
-        game.evaluate()
-
-    game.print()
-
-    if game.winner == 1:
-        print("White (1) wins!")
-    elif game.winner == -1:
-        print("Black (-1) wins!")
-    else:
-        print("It's a draw!")
-
+from src.submission.HexAgent import HexAgent
 
 if __name__ == "__main__":
-    main()
+    board_size = 4
+    agent = HexAgent(board_size, mcts_simulations=10000, lr=0.001)
+
+    for iteration in range(20):
+        print(f"Iteration {iteration + 1} started")
+        training_data = agent.self_play(n_games=100)
+        agent.train(training_data, epochs=1000, batch_size=32)
+        print(f"Iteration {iteration + 1} completed")
+
+    def trained_agent(board, action_set):
+        return agent(board, action_set)
+
+    hex_position = hexPosition(board_size)
+    hex_position.human_vs_machine(human_player=1, machine=trained_agent)
