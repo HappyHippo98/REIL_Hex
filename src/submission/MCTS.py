@@ -1,96 +1,51 @@
-import torch
-import numpy as np
-import math
-
+import random
+import copy
+from .MCTSNode import MCTSNode
 
 class MCTS:
-    def __init__(self, policy_net, value_net, board_size, c_puct=1.0, n_simulations=100):
-        self.policy_net = policy_net
-        self.value_net = value_net
-        self.board_size = board_size
-        self.c_puct = c_puct
-        self.n_simulations = n_simulations
-        self.Q = {}
-        self.N = {}
-        self.P = {}
+    def __init__(self, game, iterations=1000):
+        self.game = game
+        self.iterations = iterations
 
-    def search(self, hex_position):
-        for _ in range(self.n_simulations):
-            if hex_position.winner == 0:
-                self._simulate(hex_position)
-        return self._get_policy(hex_position)
+    def search(self, initial_state):
+        root = MCTSNode(state=initial_state)
+        for _ in range(self.iterations):
+            node = self._select(root)
+            if not self._is_terminal(node.state):
+                node = self._expand(node)
+            result = self._simulate(node)
+            self._backpropagate(node, result)
+        return root.best_child(exploration_weight=0).action
 
-    def _simulate(self, hex_position):
-        state = self._serialize_board(hex_position.board)
+    def _select(self, node):
+        while not self._is_terminal(node.state) and node.is_fully_expanded():
+            node = node.best_child()
+        return node
 
-        if state not in self.P:
-            # Expand the new state
-            self.P[state], v = self._expand(hex_position)
-            return -v
+    def _expand(self, node):
+        actions = node.state.get_action_space()
+        for action in actions:
+            if action not in [child.action for child in node.children]:
+                new_state = copy.deepcopy(node.state)
+                new_state.moove(action)
+                child_node = MCTSNode(state=new_state, parent=node, action=action)
+                node.add_child(child_node)
+                return child_node
+        return node
 
-        if hex_position.winner != 0:
-            # If the game is already won, return the value
-            print(f"Game already won by player {hex_position.winner}")
-            return 0
+    def _simulate(self, node):
+        state = copy.deepcopy(node.state)
+        while state.winner == 0:
+            action = random.choice(state.get_action_space())
+            state.moove(action)
+        return state.winner
 
-        max_ucb = -float('inf')
-        best_action = None
+    def _backpropagate(self, node, result):
+        while node is not None:
+            node.visits += 1
+            if node.state.player != result:  # Weil der Spieler nach dem Zug bereits gewechselt hat
+                node.wins += 1
+            node = node.parent
 
-        # Select the action with the highest UCB
-        for action in hex_position.get_action_space():
-            ucb = self._get_ucb(state, action)
-            if ucb > max_ucb:
-                max_ucb = ucb
-                best_action = action
-
-        # Perform the chosen action
-        hex_position.moove(best_action)
-        print(f"After move {best_action}, board state:")
-        hex_position.print()  # Debugging: Print the board state
-        if hex_position.winner != 0:
-            print(f"Game won by player {hex_position.winner} after move {best_action}")
-
-        v = self._simulate(hex_position)  # Recursively simulate the next move
-        hex_position.board[best_action[0]][best_action[1]] = 0  # Unmake the move
-        hex_position.player *= -1  # Switch back the player
-
-        self._backup(state, best_action, v)
-        return -v
-
-    def _expand(self, hex_position):
-        state_tensor = torch.tensor(hex_position.board).float().unsqueeze(0).unsqueeze(0)
-        policy, value = self.policy_net(state_tensor)
-        policy = policy.detach().numpy().flatten()
-        value = value.item()
-
-        self.P[self._serialize_board(hex_position.board)] = policy
-        print(f"Expanded node with policy: {policy} and value: {value}")
-        return policy, value
-
-    def _get_ucb(self, state, action):
-        if (state, action) not in self.Q:
-            self.Q[(state, action)] = 0
-            self.N[(state, action)] = 0
-
-        total_visits = sum(self.N.get((state, a), 0) for a in self.P[state])
-        action_index = action[0] * self.board_size + action[1]
-
-        ucb = self.Q[(state, action)] + self.c_puct * self.P[state][action_index] * math.sqrt(total_visits) / (
-                    1 + self.N[(state, action)])
-        return ucb
-
-    def _backup(self, state, action, v):
-        self.N[(state, action)] = self.N.get((state, action), 0) + 1
-        self.Q[(state, action)] = self.Q.get((state, action), 0) + (v - self.Q.get((state, action), 0)) / self.N[
-            (state, action)]
-
-    def _get_policy(self, hex_position):
-        state = self._serialize_board(hex_position.board)
-        policy = np.zeros(hex_position.size * hex_position.size)
-        for action in hex_position.get_action_space():
-            policy[action[0] * hex_position.size + action[1]] = self.N.get((state, action), 0)
-        policy /= np.sum(policy)
-        return policy
-
-    def _serialize_board(self, board):
-        return tuple(tuple(row) for row in board)
+    def _is_terminal(self, state):
+        return state.winner != 0

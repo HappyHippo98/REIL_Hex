@@ -1,18 +1,25 @@
 from src.hex_engine import hexPosition
-from src.submission.HexAgent import HexAgent
+from src.submission.MCTS import MCTS
+
+
+def mcts_hex_ai(board, action_set):
+    hex_game = hexPosition(size=len(board))
+    hex_game.board = board
+    hex_game.player = -1 if sum(cell for row in board for cell in row) > 0 else 1
+    mcts = MCTS(hex_game, iterations=1000)
+    best_action = mcts.search(hex_game)
+    return best_action
+
 
 if __name__ == "__main__":
-    board_size = 4
-    agent = HexAgent(board_size, mcts_simulations=10000, lr=0.001)
+    hex_game = hexPosition(size=4)
 
-    for iteration in range(20):
-        print(f"Iteration {iteration + 1} started")
-        training_data = agent.self_play(n_games=100)
-        agent.train(training_data, epochs=1000, batch_size=32)
-        print(f"Iteration {iteration + 1} completed")
 
-    def trained_agent(board, action_set):
-        return agent(board, action_set)
+    def machine(board, action_set):
+        hex_game.board = board
+        hex_game.player = -1 if sum(cell for row in board for cell in row) > 0 else 1
+        mcts = MCTS(hex_game, iterations=5000)
+        return mcts.search(hex_game)
 
-    hex_position = hexPosition(board_size)
-    hex_position.human_vs_machine(human_player=1, machine=trained_agent)
+
+    hex_game.human_vs_machine(machine=machine)
