@@ -1,6 +1,5 @@
 import math
 
-
 class MCTSNode:
     def __init__(self, state, parent=None, action=None):
         self.state = state
@@ -9,7 +8,7 @@ class MCTSNode:
         self.children = []
         self.visits = 0
         self.wins = 0
-        self.visit_counts = {}
+        self.visit_counts = {}  # Initialize visit counts
 
     def is_fully_expanded(self):
         return len(self.children) == len(self.state.get_action_space())
@@ -23,8 +22,12 @@ class MCTSNode:
 
     def add_child(self, child_node):
         self.children.append(child_node)
-        self.visit_counts[child_node.action] = 0
+        if child_node.action is not None:
+            self.visit_counts[child_node.action] = 0  # Initialize visit count for the action
 
     def increment_visit(self, action):
-        if action in self.visit_counts:
-            self.visit_counts[action] += 1
+        if action is not None:
+            if action in self.visit_counts:
+                self.visit_counts[action] += 1
+            else:
+                self.visit_counts[action] = 1  # Initialize if not present

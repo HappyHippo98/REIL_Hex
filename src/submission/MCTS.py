@@ -1,4 +1,7 @@
+import random
 import copy
+import torch
+import numpy as np
 
 from src.submission.MCTSNode import MCTSNode
 
@@ -47,7 +50,10 @@ class MCTS:
 
     def _select_action(self, state, action_probs):
         actions = state.get_action_space()
-        action_idx = np.random.choice(len(actions), p=action_probs)
+        action_probs = action_probs.reshape(state.size, state.size)
+        valid_action_probs = np.array([action_probs[action] for action in actions])
+        valid_action_probs /= np.sum(valid_action_probs)  # Normalize the probabilities
+        action_idx = np.random.choice(len(actions), p=valid_action_probs)
         return actions[action_idx]
 
     def _backpropagate(self, node, result):
@@ -55,6 +61,8 @@ class MCTS:
             node.visits += 1
             if node.state.player != result:  # Because the player has already switched after the move
                 node.wins += 1
+            if node.parent is not None:
+                node.parent.increment_visit(node.action)  # Ensure visit count is incremented
             node = node.parent
 
     def _is_terminal(self, state):
