@@ -2,15 +2,14 @@ import random
 import copy
 import torch
 import numpy as np
-
 from src.submission.MCTSNode import MCTSNode
 
-
 class MCTS:
-    def __init__(self, game, policy_value_net, iterations=1000):
+    def __init__(self, game, policy_value_net, iterations=1000, device='cpu'):
         self.game = game
         self.policy_value_net = policy_value_net
         self.iterations = iterations
+        self.device = device  # Ensure device compatibility
 
     def search(self, initial_state):
         root = MCTSNode(state=initial_state)
@@ -41,9 +40,9 @@ class MCTS:
     def _simulate(self, node):
         state = copy.deepcopy(node.state)
         while state.winner == 0:
-            board_tensor = torch.tensor(state.board).unsqueeze(0).unsqueeze(0).float()
+            board_tensor = torch.tensor(state.board).unsqueeze(0).unsqueeze(0).float().to(self.device)  # Move tensor to the GPU
             policy, value = self.policy_value_net(board_tensor)
-            action_probs = torch.softmax(policy, dim=1).squeeze().detach().numpy()
+            action_probs = torch.softmax(policy, dim=1).squeeze().detach().cpu().numpy()  # Move tensor to CPU for numpy operations
             action = self._select_action(state, action_probs)
             state.moove(action)
         return state.winner

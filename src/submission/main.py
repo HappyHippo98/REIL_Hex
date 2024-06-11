@@ -22,4 +22,9 @@ if __name__ == "__main__":
         return mcts.search(hex_game)
 
 
-    hex_game.human_vs_machine(machine=machine)
+    #hex_game.human_vs_machine(machine=machine)
+    import torch
+
+    print("CUDA available:", torch.cuda.is_available())
+    print("CuDNN available:", torch.backends.cudnn.is_available())
+    print("CuDNN version:", torch.backends.cudnn.version())
