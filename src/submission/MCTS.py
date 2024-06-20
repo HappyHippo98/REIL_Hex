@@ -98,8 +98,7 @@ class MCTS:
         valid_action_probs /= np.sum(valid_action_probs)
 
         ucb_values = [
-            valid_action_probs[i] + exploration_weight * np.sqrt(
-                np.log(np.sum(valid_action_probs) + 1) / (valid_action_probs[i] + 1))
+            valid_action_probs[i] + exploration_weight * np.sqrt(np.log(np.sum(valid_action_probs) + 1) / (valid_action_probs[i] + 1))
             for i in range(len(actions))
         ]
 

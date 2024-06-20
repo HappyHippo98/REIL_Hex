@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 
 class TrainNetwork:
-    def __init__(self, policy_value_net, iterations=30, epochs=15, learning_rate=0.0015, device=torch.device("cpu")):
+    def __init__(self, policy_value_net, iterations=1000, epochs=500, learning_rate=0.0015, device=torch.device("cpu")):
         self.policy_value_net = policy_value_net
         self.iterations = iterations
         self.epochs = epochs
