@@ -1,15 +1,19 @@
+import copy
+import random
+
 import torch
 import torch.optim as optim
 import os
 from MCTS import MCTS
 from src.hex_engine import hexPosition
+from src.submission.MCTSNode import MCTSNode
 from src.submission.PolicyValueNetwork import PolicyValueNetwork
 import time
 import matplotlib.pyplot as plt
 
 
 class TrainNetwork:
-    def __init__(self, policy_value_net, iterations=1000, epochs=500, learning_rate=0.0015, device=torch.device("cpu")):
+    def __init__(self, policy_value_net, iterations=100, epochs=1000, learning_rate=0.00005, device=torch.device("cpu")):
         self.policy_value_net = policy_value_net
         self.iterations = iterations
         self.epochs = epochs
@@ -38,8 +42,17 @@ class TrainNetwork:
             start_time = time.time()
 
             while game_board.winner == 0:
-                mcts.root = None
-                root_node = mcts.search(game_board)
+                if game_board.player == -1: # enemy move
+                    chosen_random_action = random.choice(game_board.get_action_space())
+                    parent = mcts.find_or_create_node(game_board)
+                    game_board.moove(chosen_random_action)
+                    newMctsNode = MCTSNode(state=game_board, parent=parent, action=chosen_random_action)
+                    mcts.node_count += 1
+                    parent.add_child(newMctsNode)
+                    parent.visit_counts[chosen_random_action] = 0
+                    print(game_board.get_action_space())
+                    continue
+                root_node = mcts.search(game_board) # AI MOVE
                 best_action = root_node.best_child(exploration_weight=0).action
                 game_board.moove(best_action)
 

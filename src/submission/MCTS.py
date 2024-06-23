@@ -6,6 +6,7 @@ import torch
 
 from src.submission.MCTSNode import MCTSNode
 
+
 class MCTS:
     def __init__(self, game, policy_value_net, iterations=1000, device='cpu'):
         self.game = game
@@ -16,11 +17,8 @@ class MCTS:
         self.node_count = 0
 
     def search(self, current_state):
-        if self.root is None:
-            self.root = MCTSNode(state=copy.deepcopy(current_state))  # Initialize root if not set
-            current_node = self.root
-        else:
-            current_node = self._find_or_create_node(current_state)
+
+        current_node = self.find_or_create_node(current_state)
 
         for _ in range(self.iterations):
             node = self._select(current_node)
@@ -30,13 +28,15 @@ class MCTS:
             self._backpropagate(node, result)
         return current_node
 
-    def _find_or_create_node(self, state):
+    def find_or_create_node(self, state):
         current_node = self.root
+        if self.root is None:
+            self.root = MCTSNode(state=copy.deepcopy(state))  # Initialize root if not set
+            current_node = self.root
 
         actions = self.get_actions_from_history(state.history)
 
         for action in actions:
-
             found = False
             for child in current_node.children:
                 if child.action == action:
@@ -78,7 +78,7 @@ class MCTS:
                 new_state = copy.deepcopy(node.state)
                 new_state.moove(action)  # Move the state according to the action
                 child_node = MCTSNode(state=new_state, parent=node, action=action)
-                self.node_count+=1
+                self.node_count += 1
                 node.add_child(child_node)
                 node.visit_counts[action] = 0  # Initialize visit count for the new action
                 return child_node
@@ -98,7 +98,8 @@ class MCTS:
         valid_action_probs /= np.sum(valid_action_probs)
 
         ucb_values = [
-            valid_action_probs[i] + exploration_weight * np.sqrt(np.log(np.sum(valid_action_probs) + 1) / (valid_action_probs[i] + 1))
+            valid_action_probs[i] + exploration_weight * np.sqrt(
+                np.log(np.sum(valid_action_probs) + 1) / (valid_action_probs[i] + 1))
             for i in range(len(actions))
         ]
 
