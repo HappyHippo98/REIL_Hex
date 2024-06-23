@@ -62,7 +62,7 @@ class MCTSNEW:
 
     def modelPredict(self, state):
         board = np.array(state.board).reshape((1, self.board_size, self.board_size, 1))  # NHWC format
-        probs, value = self.model.predict(board)
+        probs, value = self.model.predict(board,verbose = 0)
         value = value[0][0]
         probs = probs.reshape((self.board_size, self.board_size))
         return probs, value

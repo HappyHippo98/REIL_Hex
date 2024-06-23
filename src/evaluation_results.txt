@@ -1,0 +1,2 @@
+Evaluation results for iteration 0, board size 4: 0.5
+Evaluation results for iteration 1, board size 4: 0.5

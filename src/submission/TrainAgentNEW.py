@@ -1,7 +1,11 @@
+import time
+
 import numpy as np
-from keras.models import load_model
+from keras.saving.save import load_model
+
 from src.hex_engine import hexPosition
 from src.submission.HexAgentNEW import HexAgentNEW
+
 
 class TrainAgentNew:
     def __init__(self, board_size=8, model_path='current_best_model.h5'):
@@ -106,7 +110,7 @@ class TrainAgentNew:
     def trainModel(self, training_data, iteration):
         train_x, train_y = self.formatTrainingData(training_data)
         np.savez(f'training_data_{iteration}_size_{self.board_size}', train_x, train_y['policy_out'], train_y['value_out'])
-        self.model.fit(train_x, train_y, verbose=1, validation_split=0.2, epochs=10, shuffle=True)
+        self.model.fit(train_x, train_y, verbose=0, validation_split=0.2, epochs=10, shuffle=True)
         self.model.save(f'new_model_iteration_{iteration}_size_{self.board_size}.h5')
         return self.model
 
@@ -174,11 +178,14 @@ class TrainAgentNew:
     def selfPlay(self, numGames):
         training_data = []
         for i in range(numGames):
-            print('Game #: ' + str(i))
+            print(f'Game #: {i + 1}')
             g = hexPosition(self.board_size)
             player1 = HexAgentNEW(self.model, board_size=self.board_size)
             player2 = HexAgentNEW(self.model, board_size=self.board_size)
+            start_time = time.time()
             game, new_training_data = self.play_game(g, player1, player2, False)
+            end_time = time.time()
+            print(f"Game {i + 1} took: {end_time - start_time:.2f} seconds")
             training_data += new_training_data
         return training_data
 
@@ -187,9 +194,9 @@ if __name__ == "__main__":
     agent = TrainAgentNew(board_size=board_size)
 
     for i in range(3):  # Number of iterations, can be increased
-        print(f"Starting iteration {i+1} with board size {board_size}...")
-        training_data = agent.selfPlay(2)  # Number of games per iteration
+        print(f"Starting iteration {i + 1} with board size {board_size}...")
+        training_data = agent.selfPlay(5)  # Number of games per iteration
         new_model = agent.trainModel(training_data, i)
         agent.evaluateModel(new_model, agent.model, i)
         agent.model = new_model
-        print(f"Completed iteration {i+1} with board size {board_size}.")
+        print(f"Completed iteration {i + 1} with board size {board_size}.")
