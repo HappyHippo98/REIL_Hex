@@ -1,18 +1,13 @@
-from src.hex_engine import hexPosition
-from src.submission.HexAgent import HexAgent
+from src.submission.HexAgentNEW import HexAgentNEW
 
 if __name__ == "__main__":
-    board_size = 4
-    agent = HexAgent(board_size, mcts_simulations=10000, lr=0.001)
+    board_size = 8  # You can change this to any size you want
+    agent = HexAgentNEW(board_size=board_size)
 
-    for iteration in range(20):
-        print(f"Iteration {iteration + 1} started")
-        training_data = agent.self_play(n_games=100)
-        agent.train(training_data, epochs=1000, batch_size=32)
-        print(f"Iteration {iteration + 1} completed")
-
-    def trained_agent(board, action_set):
-        return agent(board, action_set)
-
-    hex_position = hexPosition(board_size)
-    hex_position.human_vs_machine(human_player=1, machine=trained_agent)
+    for i in range(10):  # Number of iterations, can be increased
+        print(f"Starting iteration {i+1} with board size {board_size}...")
+        training_data = agent.selfPlay(100)  # Number of games per iteration
+        new_model = agent.trainModel(training_data, i)
+        agent.evaluateModel(new_model, agent.model, i)
+        agent.model = new_model
+        print(f"Completed iteration {i+1} with board size {board_size}.")
