@@ -199,10 +199,10 @@ class TrainAgentNew:
         return training_data
 
 if __name__ == "__main__":
-    board_size = 7  # You can change this to any size you want
+    board_size = 7  
     agent = TrainAgentNew(board_size=board_size)
 
-    for i in range(10):  # Number of iterations, can be increased
+    for i in range(10): 
         print(f"Starting iteration {i + 1} with board size {board_size}...")
         training_data = agent.selfPlay(10)  # Number of games per iteration
         new_model = agent.trainModel(training_data, i)

@@ -23,7 +23,7 @@ class TrainNetwork:
         self.win_loss_ratios = []
         self.times = []
 
-        # Create the NetData directory if it does not exist
+        
         os.makedirs("NetData", exist_ok=True)
 
     def train(self):
