@@ -31,7 +31,7 @@ class MCTS:
     def find_or_create_node(self, state):
         current_node = self.root
         if self.root is None:
-            self.root = MCTSNode(state=copy.deepcopy(state))  # Initialize root if not set
+            self.root = MCTSNode(state=copy.deepcopy(state))  
             current_node = self.root
 
         actions = self.get_actions_from_history(state.history)
@@ -73,7 +73,7 @@ class MCTS:
         actions = node.state.get_action_space()
         random.shuffle(actions)
         for action in actions:
-            action = tuple(action)  # Ensure action is a tuple
+            action = tuple(action)  # Make sure action is a tuple
             if action not in [child.action for child in node.children]:
                 new_state = copy.deepcopy(node.state)
                 new_state.moove(action)  # Move the state according to the action
@@ -124,7 +124,7 @@ class MCTS:
             action_probs = torch.softmax(policy, dim=1).squeeze().detach().cpu().numpy()
             action = self._select_action_with_ucb(state, action_probs, visited_actions)
             visited_actions.append(action)
-            state.moove(tuple(action))  # Ensure action is a tuple
+            state.moove(tuple(action))  # Make sure action is a tuple
         return state.winner
 
     def _select_action(self, state, action_probs):
