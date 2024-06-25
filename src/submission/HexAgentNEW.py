@@ -73,7 +73,7 @@ if __name__ == "__main__":
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     logging.getLogger().setLevel(logging.WARNING)
 
-    board_size = 4  # You can change this to any size you want
+    board_size = 7  # You can change this to any size you want
     model_path = 'current_best_model.h5'  # Path to the trained model
     model = load_model(model_path)
     agent = HexAgentNEW(model, board_size=board_size,use_mcts=False)

@@ -115,16 +115,25 @@ class TrainAgentNew:
         return self.model
 
     def evaluateModel(self, new_model, current_model, iteration):
-        numEvaluationGames = 40
+        numEvaluationGames = 24
         newChallengerWins = 0
         threshold = 0.55
 
         for i in range(int(numEvaluationGames // 2)):
+            print("eval first loop " + str(i) + " / " + str(int(numEvaluationGames // 2)))
             g = hexPosition(self.board_size)
             game, _ = self.play_game(g, HexAgentNEW(new_model, board_size=self.board_size), HexAgentNEW(current_model, board_size=self.board_size), False)
             if game.winner:
                 newChallengerWins += game.winner
+        winRate = newChallengerWins / numEvaluationGames
+        print('Evaluation win rate: ' + str(winRate))
+        with open("evaluation_results.txt", "a") as text_file:
+            text_file.write(
+                f"Evaluation results for iteration {iteration}, board size {self.board_size}: {str(winRate)}\n")
+        if winRate >= threshold:
+            new_model.save(f'current_best_model_size_{self.board_size}.h5')
         for i in range(int(numEvaluationGames // 2)):
+            print("eval second loop " + str(i) + " / " + str(int(numEvaluationGames // 2)))
             g = hexPosition(self.board_size)
             game, _ = self.play_game(g, HexAgentNEW(current_model, board_size=self.board_size), HexAgentNEW(new_model, board_size=self.board_size), False)
             if game.winner == -1:
@@ -190,12 +199,12 @@ class TrainAgentNew:
         return training_data
 
 if __name__ == "__main__":
-    board_size = 4  # You can change this to any size you want
+    board_size = 7  # You can change this to any size you want
     agent = TrainAgentNew(board_size=board_size)
 
-    for i in range(3):  # Number of iterations, can be increased
+    for i in range(10):  # Number of iterations, can be increased
         print(f"Starting iteration {i + 1} with board size {board_size}...")
-        training_data = agent.selfPlay(5)  # Number of games per iteration
+        training_data = agent.selfPlay(10)  # Number of games per iteration
         new_model = agent.trainModel(training_data, i)
         agent.evaluateModel(new_model, agent.model, i)
         agent.model = new_model
